@@ -367,6 +367,12 @@ def test_named_dependency_explicit_marker() -> None:
         # uses parameter default
         assert client.get("/").json() == 1
 
+        # isn't read from the query string when no provider exists
+        assert client.get("/?foo=5").json() == 1
+        res = client.get("/?foo=abc")
+        assert res.status_code == 200
+        assert res.json() == 1
+
         # isn't implicitly treated as a query parameter
         schema = client.get("/schema/openapi.json").json()
         assert schema["paths"]["/"]["get"].get("parameters") is None
