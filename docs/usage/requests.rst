@@ -113,7 +113,9 @@ Content-Type header by specifying the data with :data:`~litestar.params.Multipar
     ``MultipartBody[<type>]`` is a shorthand for
     ``Annotated[<type>, Body(media_type=RequestEncodingType.MULTI_PART)]``. If you want
     to pass additional OpenAPI metadata or constraints, use the
-    :class:`~typing.Annotated` form
+    :class:`~typing.Annotated` form with all settings in a single ``Body(...)``.
+    Adding a ``Body(...)`` on top of ``MultipartBody[<type>]`` raises an
+    :class:`~litestar.exceptions.ImproperlyConfiguredException` at startup.
 
 
 File uploads

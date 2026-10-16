@@ -490,6 +490,13 @@ class FieldDefinition:
             elif kwarg_definition := next(
                 (v for v in metadata if isinstance(v, (KwargDefinition, DependencyKwarg))), None
             ):
+                if sum(isinstance(v, BodyKwarg) for v in metadata) > 1:
+                    raise ImproperlyConfiguredException(
+                        "Annotation has more than one 'Body' definition. Body markers such as "
+                        "'MultipartBody[<type>]' do not accept additional 'Body(...)' settings. Use "
+                        "'Annotated[<type>, Body(media_type=..., ...)]' instead."
+                    )
+
                 kwargs["kwarg_definition"] = kwarg_definition
 
                 if kwarg_definition.default is not Empty:
