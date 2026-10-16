@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 import msgspec
+import pytest
 
 from litestar import Controller, get
 from litestar.di import NamedDependency, Provide
+from litestar.exceptions import LitestarDeprecationWarning
 from litestar.params import FromPath, FromQuery
 from litestar.testing import create_test_client
 
@@ -71,3 +73,25 @@ def test_inject_msgspec_struct() -> None:
         res = client.get("/?bar=baz")
         assert res.status_code == 200
         assert res.json() == {"bar": "baz"}
+
+
+def test_inject_msgspec_struct_with_inferred_query_param() -> None:
+    class Foo(msgspec.Struct):
+        bar: str
+
+    @get("/", dependencies={"foo": Provide(Foo, sync_to_thread=False)})
+    async def handler(foo: NamedDependency[Foo]) -> str:
+        return foo.bar
+
+    with pytest.warns(LitestarDeprecationWarning, match="query parameter 'bar' declared using deprecated inferred"):
+        client = create_test_client([handler])
+
+    with client:
+        assert client.get("/?bar=x").text == "x"
+
+        res = client.get("/")
+        assert res.status_code == 400
+        assert [e["key"] for e in res.json()["extra"]] == ["bar"]
+
+        parameters = client.app.openapi_schema.paths["/"].get.parameters
+        assert [(p.name, p.param_in.value) for p in parameters] == [("bar", "query")]

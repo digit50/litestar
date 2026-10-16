@@ -7,14 +7,11 @@ from typing import Any
 
 import msgspec
 
-from litestar.di import NamedDependency
 from litestar.openapi.spec import Example
 from litestar.params import ParameterKwarg
 from litestar.plugins import DIPlugin
 
 __all__ = ("MsgspecDIPlugin", "kwarg_definition_from_field")
-
-from litestar.utils.typing import unwrap_annotation
 
 
 class MsgspecDIPlugin(DIPlugin):
@@ -25,17 +22,12 @@ class MsgspecDIPlugin(DIPlugin):
         parameters = []
         type_hints = {}
         for field_info in msgspec.structs.fields(type_):
-            metadata = unwrap_annotation(field_info.type)[1]
-            type_ = field_info.type
-            if not any(isinstance(m, ParameterKwarg) for m in metadata):
-                type_ = NamedDependency[type_]  # type: ignore[misc]
-
-            type_hints[field_info.name] = type_
+            type_hints[field_info.name] = field_info.type
             parameters.append(
                 inspect.Parameter(
                     name=field_info.name,
                     kind=inspect.Parameter.KEYWORD_ONLY,
-                    annotation=type_,
+                    annotation=field_info.type,
                     default=field_info.default,
                 )
             )
