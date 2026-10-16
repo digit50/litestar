@@ -471,15 +471,15 @@ class FieldDefinition:
                     can_use_marker = (
                         not kwarg_definition.is_constrained and kwarg_definition.multipart_form_part_limit is None
                     )
+                    alternative = "Annotated[<type>, Body(...)]"
                     if can_use_marker:
-                        alternative = {
+                        markers: dict[str, str] = {
                             RequestEncodingType.JSON: "JSONBody[<type>]",
                             RequestEncodingType.MESSAGEPACK: "MsgPackBody[<type>]",
                             RequestEncodingType.MULTI_PART: "MultiPartBody[<type>]",
                             RequestEncodingType.URL_ENCODED: "URLEncodedBBody[<type>]",
-                        }[RequestEncodingType(kwarg_definition.media_type)]
-                    else:
-                        alternative = "Annotated[<type>, Body(...)]"
+                        }
+                        alternative = markers.get(kwarg_definition.media_type, alternative)
                     warnings.warn(
                         "Deprecated use of 'Body()' as a default value. This will be removed"
                         f"in Litestar 3.0. Use 'data: {alternative}' instead of "
